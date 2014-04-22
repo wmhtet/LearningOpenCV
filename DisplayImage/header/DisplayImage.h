@@ -13,12 +13,16 @@
 #ifndef DISPLAYIMAGE_H_
 #define DISPLAYIMAGE_H_
 
+using namespace cv;
 
 int displayPic(int argc, char** argv);
 
 int displayMovie(int argc, char** argv);
 int displayMovieBlurr(int argc, char** argv);
 int displayMovieTracker(int argc, char** argv);
+int displayTransform(int argc, char** argv, bool simple);
+void simpleTransform(Mat image);
+void notSoSimpleTransform(Mat image)
 
 
 #endif /* DISPLAYIMAGE_H_ */

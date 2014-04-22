@@ -3,15 +3,16 @@
 #include <DisplayImage.h>
 //   /home/whtet/temp/archive/faceDetect_sample/lena.jpg
 //   /home/whtet/temp/video/PPV.mp4
-using namespace cv;
 
 static const int DISPLAY_PICTURE = 0;
 static const int DISPLAY_MOVIE = 1;
 static const int DISPLAY_MOVIE_BLURR = 2;
 static const int DISPLAY_MOVIE_TRACKER = 3;
+static const int DISPLAY_SIMPLE_TRANSFORM = 4;
+static const int DISPLAY__NOT_SO_SIMPLE_TRANSFORM = 5;
 
 int main(int argc, char** argv) {
-	int methodId = DISPLAY_MOVIE_TRACKER;
+	int methodId = DISPLAY_SIMPLE_TRANSFORM;
 	switch (methodId) {
 	case DISPLAY_PICTURE:
 		return displayPic(argc, argv);
@@ -21,10 +22,51 @@ int main(int argc, char** argv) {
 		return displayMovieBlurr(argc, argv);
 	case DISPLAY_MOVIE_TRACKER:
 		return displayMovieTracker(argc, argv);
+	case DISPLAY_SIMPLE_TRANSFORM:
+		return displayTransform(argc, argv, true);
+	case DISPLAY__NOT_SO_SIMPLE_TRANSFORM:
+		return displayTransform(argc, argv, false);
 	default:
 		printf("No such method %d %s \n", methodId, argv[1]);
 		break;
 	}
+}
+
+int displayTransform(int argc, char** argv, bool simple) {
+	//http://docs.opencv.org/modules/highgui/doc/reading_and_writing_images_and_video.html#imread
+	Mat image = imread(argv[1], 1);
+	if (argc != 2 || !image.data) {
+		printf("No image data \n");
+		return -1;
+	}
+	if (simple) {
+		simpleTransform(image);
+	} else {
+		notSoSimpleTransform(image);
+	}
+	return 0;
+}
+
+void notSoSimpleTransform(Mat image) {
+
+}
+
+void simpleTransform(Mat image) {
+	//http://docs.opencv.org/modules/highgui/doc/user_interface.html?highlight=cvcreatetrackbar#namedwindow
+	namedWindow("IN_IMAGE");
+	namedWindow("OUT_IMAGE");
+	imshow("IN_IMAGE", image);
+	//http://docs.opencv.org/modules/core/doc/basic_structures.html#mat-mat
+	Mat out = cv::Mat(image.size(), CV_8UC1);
+	//http://docs.opencv.org/modules/imgproc/doc/filtering.html?highlight=cvsmooth#gaussianblur
+	GaussianBlur(image, out, Size(3, 3), 1.5, 1.5);
+	imshow("OUT_IMAGE", out);
+	out.release();
+	//http://docs.opencv.org/modules/highgui/doc/user_interface.html?highlight=cvcreatetrackbar#waitkey
+	waitKey(0);
+	//http://docs.opencv.org/modules/highgui/doc/user_interface.html?highlight=cvcreatetrackbar#destroywindow
+	destroyWindow("OUT_IMAGE");
+	destroyWindow("IN_IMAGE");
 }
 
 int gSliderCurrPosition = 0;
@@ -33,6 +75,7 @@ VideoCapture *gVcapTracker;
 void onTrackbarChanged(int pos, void* _void) {
 	//printf("on_trackbar %d %d \n", pos, gSliderCurrPosition);
 	if (gSliderCurrPosition != pos) {
+		//http://docs.opencv.org/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-set
 		gVcapTracker->set(CV_CAP_PROP_POS_FRAMES, pos);
 		//bool flag = //printf("on_trackbar %d %s \n", pos, flag ? "true" : "false");
 	}
@@ -47,12 +90,14 @@ int displayMovieTracker(int argc, char** argv) {
 	int frames = (int) gVcapTracker->get(CV_CAP_PROP_FRAME_COUNT);
 
 	if (frames != 0) {
+		//http://docs.opencv.org/modules/highgui/doc/user_interface.html?highlight=cvcreatetrackbar#createtrackbar
 		createTrackbar("Position", "Display Image", &gSlider_position, frames,
 				onTrackbarChanged);
 	}
 
 	while (1) {
 		gVcapTracker->read(image);
+		//http://docs.opencv.org/modules/highgui/doc/user_interface.html?highlight=cvcreatetrackbar#settrackbarpos
 		setTrackbarPos("Position", "Display Image", gSlider_position);
 		gSlider_position++;
 		gSliderCurrPosition = gSlider_position;
@@ -70,6 +115,7 @@ int displayMovieTracker(int argc, char** argv) {
 }
 
 int displayMovie(int argc, char** argv) {
+	//http://docs.opencv.org/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-videocapture
 	VideoCapture *vcap = new VideoCapture(argv[1]);
 	Mat image;
 
