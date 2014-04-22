@@ -3,16 +3,17 @@
 #include <DisplayImage.h>
 //   /home/whtet/temp/archive/faceDetect_sample/lena.jpg
 //   /home/whtet/temp/video/PPV.mp4
-
+// /home/whtet/temp/image/15_01_33---Tree-Black-and-White_web.jpg
 static const int DISPLAY_PICTURE = 0;
 static const int DISPLAY_MOVIE = 1;
 static const int DISPLAY_MOVIE_BLURR = 2;
 static const int DISPLAY_MOVIE_TRACKER = 3;
 static const int DISPLAY_SIMPLE_TRANSFORM = 4;
-static const int DISPLAY__NOT_SO_SIMPLE_TRANSFORM = 5;
+static const int DISPLAY_NOT_SO_SIMPLE_TRANSFORM = 5;
 
 int main(int argc, char** argv) {
-	int methodId = DISPLAY_SIMPLE_TRANSFORM;
+	printf("Open %s \n", argv[1]);
+	int methodId = DISPLAY_NOT_SO_SIMPLE_TRANSFORM;
 	switch (methodId) {
 	case DISPLAY_PICTURE:
 		return displayPic(argc, argv);
@@ -24,7 +25,7 @@ int main(int argc, char** argv) {
 		return displayMovieTracker(argc, argv);
 	case DISPLAY_SIMPLE_TRANSFORM:
 		return displayTransform(argc, argv, true);
-	case DISPLAY__NOT_SO_SIMPLE_TRANSFORM:
+	case DISPLAY_NOT_SO_SIMPLE_TRANSFORM:
 		return displayTransform(argc, argv, false);
 	default:
 		printf("No such method %d %s \n", methodId, argv[1]);
@@ -47,10 +48,41 @@ int displayTransform(int argc, char** argv, bool simple) {
 	return 0;
 }
 
+// Oreiley's Learning openCV example 2-5
 void notSoSimpleTransform(Mat image) {
-
+	Mat processed = doPyrDown(image, IPL_GAUSSIAN_5x5);
+	processed = doPyrDown(processed, IPL_GAUSSIAN_5x5);
+	processed = doCanny(processed, 10, 100, 3);
+	namedWindow("IN_IMAGE");
+	namedWindow("OUT_IMAGE");
+	imshow("IN_IMAGE", image);
+	imshow("OUT_IMAGE", processed);
+	processed.release();
+	image.release();
+	waitKey(0);
+	destroyWindow("OUT_IMAGE");
+	destroyWindow("IN_IMAGE");
 }
 
+Mat doPyrDown(Mat image, int filter) {
+	assert(image.size().width % 2 == 0 && image.size().height % 2 == 0);
+	Mat out = Mat(image.size(), image.depth(), image.channels());
+	pyrDown(image, out);
+	return out;
+}
+
+Mat doCanny(Mat image, double lowTresh, double highTresh, double aperture) {
+	if (image.channels() != 1) {
+		printf("Image channel %d \n",image.channels());
+		String error = "Canny only handles gray scale images";
+		// throw error; it is working even if it is not grayscale
+	}
+	Mat out = Mat(image.size(), CV_8UC1);
+	Canny(image, out, lowTresh, highTresh, aperture);
+	return out;
+}
+
+// Oreiley's Learning openCV example 2-4
 void simpleTransform(Mat image) {
 	//http://docs.opencv.org/modules/highgui/doc/user_interface.html?highlight=cvcreatetrackbar#namedwindow
 	namedWindow("IN_IMAGE");
@@ -81,6 +113,7 @@ void onTrackbarChanged(int pos, void* _void) {
 	}
 }
 
+// Oreiley's Learning openCV example 2-3
 int displayMovieTracker(int argc, char** argv) {
 	Mat image;
 	int gSlider_position = 0;
@@ -114,6 +147,7 @@ int displayMovieTracker(int argc, char** argv) {
 	return 0;
 }
 
+// Oreiley's Learning openCV example 2-2
 int displayMovie(int argc, char** argv) {
 	//http://docs.opencv.org/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture-videocapture
 	VideoCapture *vcap = new VideoCapture(argv[1]);
@@ -139,6 +173,7 @@ int displayMovie(int argc, char** argv) {
 	return 0;
 }
 
+//http://docs.opencv.org/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture
 int displayMovieBlurr(int argc, char** argv) {
 	//VideoCapture *vcap = new VideoCapture(argv[1]);
 	String path = "/home/whtet/temp/video/PPV.mp4";
@@ -176,6 +211,7 @@ int displayMovieBlurr(int argc, char** argv) {
 	return 0;
 }
 
+// Oreiley's Learning openCV example 2-1
 int displayPic(int argc, char** argv) {
 	Mat image;
 	image = imread(argv[1], 1);
