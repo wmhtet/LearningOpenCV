@@ -1,5 +1,3 @@
-#include <cv.hpp>
-#include <highgui.h>
 #include <DisplayImage.h>
 //   /home/whtet/temp/archive/faceDetect_sample/lena.jpg
 //   /home/whtet/temp/video/PPV.mp4

@@ -11,6 +11,7 @@
 //http://www.cprogramming.com/java/c-and-c++-for-java-programmers.html
 #ifndef DISPLAYIMAGE_H_
 #define DISPLAYIMAGE_H_
+#include <LocalEnv.h>
 
 using namespace cv;
 
