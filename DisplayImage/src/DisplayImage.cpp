@@ -8,10 +8,11 @@ static const int DISPLAY_MOVIE_BLURR = 2;
 static const int DISPLAY_MOVIE_TRACKER = 3;
 static const int DISPLAY_SIMPLE_TRANSFORM = 4;
 static const int DISPLAY_NOT_SO_SIMPLE_TRANSFORM = 5;
+static const int PRACTICAL_OPEN_CV = 6;
 
 int main(int argc, char** argv) {
 	printf("Open %s \n", argv[1]);
-	int methodId = DISPLAY_NOT_SO_SIMPLE_TRANSFORM;
+	int methodId = PRACTICAL_OPEN_CV;
 	switch (methodId) {
 	case DISPLAY_PICTURE:
 		return displayPic(argc, argv);
@@ -25,6 +26,8 @@ int main(int argc, char** argv) {
 		return displayTransform(argc, argv, true);
 	case DISPLAY_NOT_SO_SIMPLE_TRANSFORM:
 		return displayTransform(argc, argv, false);
+	case PRACTICAL_OPEN_CV:
+		return PracticalOpenCV::entry(argc, argv);
 	default:
 		printf("No such method %d %s \n", methodId, argv[1]);
 		break;
@@ -33,7 +36,7 @@ int main(int argc, char** argv) {
 
 int displayTransform(int argc, char** argv, bool simple) {
 	//http://docs.opencv.org/modules/highgui/doc/reading_and_writing_images_and_video.html#imread
-	Mat image = imread(argv[1], 1);
+	Mat image = imread(argv[1], CV_LOAD_IMAGE_COLOR);
 	if (argc != 2 || !image.data) {
 		printf("No image data \n");
 		return -1;
@@ -41,15 +44,15 @@ int displayTransform(int argc, char** argv, bool simple) {
 	if (simple) {
 		simpleTransform(image);
 	} else {
-		notSoSimpleTransform(image);
+		DisplayImage::notSoSimpleTransform(image);
 	}
 	return 0;
 }
 
 // Oreiley's Learning openCV example 2-5
-void notSoSimpleTransform(Mat image) {
+void DisplayImage::notSoSimpleTransform(Mat image) {
 	Mat processed = doPyrDown(image, IPL_GAUSSIAN_5x5);
-	processed = doPyrDown(processed, IPL_GAUSSIAN_5x5);
+	//processed = doPyrDown(processed, IPL_GAUSSIAN_5x5);
 	processed = doCanny(processed, 10, 100, 3);
 	namedWindow("IN_IMAGE");
 	namedWindow("OUT_IMAGE");
@@ -63,20 +66,23 @@ void notSoSimpleTransform(Mat image) {
 }
 
 Mat doPyrDown(Mat image, int filter) {
-	assert(image.size().width % 2 == 0 && image.size().height % 2 == 0);
+	//assert(image.size().width % 2 == 0 && image.size().height % 2 == 0);
+	if (image.size().width <= 480)
+		return image;
 	Mat out = Mat(image.size(), image.depth(), image.channels());
 	pyrDown(image, out);
 	return out;
 }
 
 Mat doCanny(Mat image, double lowTresh, double highTresh, double aperture) {
-	if (image.channels() != 1) {
-		printf("Image channel %d \n",image.channels());
-		String error = "Canny only handles gray scale images";
-		// throw error; it is working even if it is not grayscale
-	}
 	Mat out = Mat(image.size(), CV_8UC1);
-	Canny(image, out, lowTresh, highTresh, aperture);
+	if (image.channels() != 1) {
+		printf("Image channel %d \n", image.channels());
+		cvtColor(image, out, CV_RGB2GRAY);
+		Canny(out, out, lowTresh, highTresh, aperture);
+	} else {
+		Canny(image, out, lowTresh, highTresh, aperture);
+	}
 	return out;
 }
 
@@ -212,7 +218,7 @@ int displayMovieBlurr(int argc, char** argv) {
 // Oreiley's Learning openCV example 2-1
 int displayPic(int argc, char** argv) {
 	Mat image;
-	image = imread(argv[1], 1);
+	image = imread(argv[1], CV_LOAD_IMAGE_COLOR);
 
 	if (argc != 2 || !image.data) {
 		printf("No image data \n");
